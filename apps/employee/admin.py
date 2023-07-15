@@ -3,7 +3,7 @@ from django.contrib import admin
 from apps.employee.models import Employee, Position
 
 
-class EmployeeInlineAdmin(admin.TabularInline):
+class EmployeeAdmin(admin.ModelAdmin):
     model = Employee
     list_display = [
         "full_name",
@@ -14,15 +14,12 @@ class EmployeeInlineAdmin(admin.TabularInline):
     ]
 
 
-# admin.site.register(Employee, EmployeeAdmin)
+admin.site.register(Employee, EmployeeAdmin)
 
 
 class PositionAdmin(admin.ModelAdmin):
     list_display = [
         "position_name",
-    ]
-    inlines = [
-        EmployeeInlineAdmin,
     ]
 
 

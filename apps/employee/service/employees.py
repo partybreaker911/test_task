@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import List, Dict, QuerySet
 
 from django.db.models import F
 
@@ -57,11 +57,16 @@ class EmployeeService:
             "show_supervisors": employee.show_supervisors,
             "supervisors": [
                 EmployeeService._get_employee_with_depth(e, depth + 1)
-                for e in employee.employee_set.all()
+                for e in employee.children.all()
                 if employee.show_supervisors
             ],
         }
 
     @staticmethod
-    def _get_top_level_employee():
+    def _get_top_level_employee() -> QuerySet[Employee]:
+        """
+        Retrieves the top level employee(s) from the database.
+
+        :return: A QuerySet of Employee objects representing the top level employee(s).
+        """
         return Employee.objects.filter(supervisor__isnull=True)

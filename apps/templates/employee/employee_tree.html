@@ -4,9 +4,103 @@
 
 
 {% block content %}
-{% for item in employees %}
-{{ employees }}
-    {% include "employees/partials/employee.html" with employee=item.employee depth=item.depth %}
-{% endfor %}   
+<table>
+    <thead>
+      <tr>
+        <th>{% trans "Full Name" %}</th>
+        <th>{% trans "Position" %}</th>
+        <th>{% trans "Hire Date" %}</th>
+        <th>{% trans "Email" %}</th>
+        <th>{% trans "Supervisor" %}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for employee in employees %}
+      <tr>
+        <td>
+          <span class="toggle" data-target=".supervisors-{{ employee.employee.id }}">+</span>
+          {{ employee.employee.full_name }}
+        </td>
+        <td>{{ employee.employee.position.position_name }}</td>
+        <td>{{ employee.employee.hire_date }}</td>
+        <td>{{ employee.employee.email }}</td>
+        <td>{{ employee.employee.supervisor.full_name }}</td>
+      </tr>
+      {% if employee.show_supervisors %}
+        {% for supervisor in employee.supervisors %}
+        <tr class="supervisors-{{ employee.employee.id }}" style="display: none;">
+          <td>
+            <span class="toggle" data-target=".supervisors-{{ supervisor.employee.id }}">+</span>
+            {{ supervisor.employee.full_name }}
+          </td>
+          <td>{{ supervisor.employee.position.position_name }}</td>
+          <td>{{ supervisor.employee.hire_date }}</td>
+          <td>{{ supervisor.employee.email }}</td>
+          <td>{{ supervisor.employee.supervisor.full_name }}</td>
+        </tr>
+        {% endfor %}
+      {% endif %}
+      {% endfor %}
+    </tbody>
+  </table>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- jQuery UI -->
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.13.0/themes/base/jquery-ui.css">
+<script src="https://code.jquery.com/ui/1.13.0/jquery-ui.js"></script>
+  <script>
+    // jQuery
+    $(document).ready(function() {
+      $('.toggle').click(function() {
+        const target = $(this).data('target');
+        $(target).toggle();
+        const icon = $(this).text();
+        $(this).text(icon === '+' ? '-' : '+');
+      });
+    });
+    $(document).ready(function() {
+        $(".supervisor-cell").droppable({
+          accept: ".supervisor-name",
+          drop: function(event, ui) {
+            const supervisorCell = $(this);
+            const newSupervisorId = ui.draggable.siblings(".employee-id").val();
+            const employeeId = supervisorCell.find(".employee-id").val();
+    
+            // Perform AJAX request to update supervisor in the backend
+            // You will need to implement the backend logic for updating supervisors
+    
+            // Example AJAX request
+            $.ajax({
+              url: "/update_supervisor/",
+              method: "POST",
+              data: {
+                employee_id: employeeId,
+                new_supervisor_id: newSupervisorId
+              },
+              success: function(response) {
+                // Handle successful response
+                supervisorCell.find(".supervisor-name").text(ui.draggable.text());
+                ui.draggable.text(supervisorCell.find(".supervisor-name").text());
+              },
+              error: function(xhr, textStatus, error) {
+                // Handle error
+                console.log(error);
+              }
+            });
+          }
+        });
+    
+        $(".supervisor-name").draggable({
+          revert: "invalid"
+        });
+      });
+  </script>
+
+{% block javscript %}
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
+
+{% endblock javscript %}
+    
 {% endblock content %}
     

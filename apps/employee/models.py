@@ -13,7 +13,7 @@ class Position(models.Model):
         unique=True,
         editable=False,
     )
-    position_name = models.CharField(_("Position name"), max_length=50)
+    position_name = models.CharField(_("Position name"), max_length=244)
 
     class Meta:
         verbose_name = _("Position")

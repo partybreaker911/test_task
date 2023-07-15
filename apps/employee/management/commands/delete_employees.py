@@ -3,7 +3,7 @@ from typing import Any
 from django.core.management.base import BaseCommand
 from django.utils.translation import gettext_lazy as _
 
-from apps.employee.models import Employee
+from apps.employee.models import Employee, Position
 
 
 class Command(BaseCommand):
@@ -20,7 +20,7 @@ class Command(BaseCommand):
 
         # Delete all records
         Employee.objects.all().delete()
-
+        Position.objects.all().delete()
         self.stdout.write(
             self.style.SUCCESS(
                 _("Successfully deleted all rows from the comm_employee table")

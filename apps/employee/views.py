@@ -1,116 +1,48 @@
 from django.views import View
 from django.shortcuts import render
-from django.http import JsonResponse
+from django.http import HttpRequest, HttpResponse
 from django.utils.translation import gettext_lazy as _
-from django.contrib.auth.mixins import LoginRequiredMixin
 
 from apps.employee.service.employees import EmployeeService
 
 
 class EmployeeListView(View):
+    employee_service = EmployeeService()
     template_name = "employee/employee_list.html"
-    service = EmployeeService()
+    items_per_page = 15
 
-    def get(self, request):
+    def get(self, request: HttpRequest) -> HttpResponse:
         """
-        Get method that handles the HTTP GET request.
+        Retrieves a paginated list of employees based on the provided parameters.
 
         Args:
             request (HttpRequest): The HTTP request object.
 
         Returns:
-            HttpResponse: The rendered HTML response.
+            HttpResponse: The HTTP response object containing the rendered template.
         """
-        return render(request, self.template_name)
+        sort_by = request.GET.get("sort_by", "first_name")
+        page_number = int(request.GET.get("page", 1))
+        search_query = request.GET.get("search", "").strip()
 
-
-class EmployeeTableAjax(View):
-    service = EmployeeService()
-
-    def get(self, request):
-        """
-        Get method to retrieve employee data.
-
-        Args:
-            request: The HTTP request object.
-
-        Returns:
-            JsonResponse: The JSON response containing the employee data.
-        """
-        employees_data = self.service._get_employee_data()
-
-        context = {
-            "data": employees_data,
-        }
-        return JsonResponse(context)
-
-
-class EmployeeTreeView(LoginRequiredMixin, View):
-    template_name = "employee/employee_tree.html"
-    service = EmployeeService()
-
-    def get(self, request):
-        """
-        Get the top-level employees and their respective subordinates.
-
-        Parameters:
-            request (HttpRequest): The request object.
-
-        Returns:
-            HttpResponse: The rendered response containing the employees and their subordinates.
-        """
-        top_level_employees = self.service._get_top_level_employee()
-        employees = [
-            self.service._get_employee_with_depth(e) for e in top_level_employees
-        ]
+        employees = (
+            self.employee_service.search_employees(search_query, self.items_per_page)
+            if search_query
+            else self.employee_service.get_paginated_employees(
+                sort_by, page_number, self.items_per_page
+            )
+        )
 
         context = {
             "employees": employees,
+            "has_previous": employees.has_previous(),
+            "has_next": employees.has_next(),
+            "previous_page_number": employees.previous_page_number()
+            if employees.has_previous()
+            else None,
+            "next_page_number": employees.next_page_number()
+            if employees.has_next()
+            else None,
         }
+
         return render(request, self.template_name, context)
-
-
-class UpdateEmployeeSupervisor(View):
-    service = EmployeeService()
-
-    def post(self, request):
-        """
-        Handle the POST request to update the supervisor of an employee.
-
-        Parameters:
-            request (HttpRequest): The HTTP request object.
-                - POST parameters:
-                    - employee_id (int): The ID of the employee.
-                    - supervisor_id (int): The ID of the new supervisor.
-
-        Returns:
-            JsonResponse: The JSON response containing the success status and a message.
-                - success (bool): True if the supervisor was successfully updated, False otherwise.
-                - message (str): A message indicating the result of the update.
-
-        Raises:
-            EmployeeNotFoundError: If either the employee or the new supervisor is not found.
-            Exception: If any other exception occurs during the update.
-        """
-        employee_id = request.POST.get("employee_id")
-        supervisor_id = request.POST.get("supervisor_id")
-
-        try:
-            self.service._update_supervisor(employee_id, supervisor_id)
-            response_data = {
-                "success": True,
-                "message": _("Successfully updated supervisor"),
-            }
-        except self.service.EmployeeNotFoundError:
-            response_data = {
-                "success": False,
-                "message": _("Employee or new supervisor not found."),
-            }
-        except Exception as e:
-            response_data = {
-                "success": False,
-                "message": str(e),
-            }
-        return JsonResponse(response_data)
-
-        # employee = self.service._get_employee_and_supervisor_by_id(employee_id)

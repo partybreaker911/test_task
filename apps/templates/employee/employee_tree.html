@@ -3,45 +3,48 @@
 {% load i18n %}
 
 {% block content %}
-  <table class="table table-hover" id="employee-table">
-    <thead>
-      <tr>
-        <th>{% trans "Full Name" %}</th>
-        <th>{% trans "Position" %}</th>
-        <th>{% trans "Hire Date" %}</th>
-        <th>{% trans "Email" %}</th>
-        <th>{% trans "Supervisor" %}</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for employee in employees %}
-        <tr id="{{ employee.id }}">
-          <td>
-            <span class="toggle" data-target=".supervisors-{{ employee.employee.id }}">+</span>
-            {{ employee.employee.full_name }}
-          </td>
-          <td>{{ employee.employee.position.position_name }}</td>
-          <td>{{ employee.employee.hire_date }}</td>
-          <td>{{ employee.employee.email }}</td>
-          <td>{{ employee.employee.supervisor.full_name }}</td>
-        </tr>
-        {% if employee.show_supervisors %}
-          {% for supervisor in employee.supervisors %}
-            <tr class="supervisors-{{ employee.employee.id }}" style="display: none;">
-              <td>
-                <span class="toggle" data-target=".supervisors-{{ supervisor.employee.id }}">+</span>
-                {{ supervisor.employee.full_name }}
-              </td>
-              <td>{{ supervisor.employee.position.position_name }}</td>
-              <td>{{ supervisor.employee.hire_date }}</td>
-              <td>{{ supervisor.employee.email }}</td>
-              <td>{{ supervisor.employee.supervisor.full_name }}</td>
-            </tr>
-          {% endfor %}
-        {% endif %}
+{% for supervisor in supervisors %}
+<li>
+  {{ supervisor.full_name }}
+  {% if supervisor.children.exists %}
+    <ul>
+      {% for subordinate in supervisor.children.all %}
+        <li>
+          {{ subordinate.full_name }}
+          {% if subordinate.children.exists %}
+            {% comment %} {% include 'employee/subordinate_children.html' with supervisor=subordinate %} {% endcomment %}
+          {% endif %}
+        </li>
       {% endfor %}
-    </tbody>
-  </table>
+    </ul>
+  {% endif %}
+</li>
+{% endfor %}
+
+<style>
+  .child-row {
+    display: none;
+  }
+  .toggle-children {
+    cursor: pointer;
+  }
+</style>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const toggleButtons = document.querySelectorAll(".toggle-children");
+
+    toggleButtons.forEach(function (button) {
+      button.addEventListener("click", function () {
+        const childRow = button.parentNode.parentNode.nextSibling;
+        childRow.style.display =
+          childRow.style.display === "none" ? "table-row" : "none";
+        button.textContent =
+          button.textContent === "+" ? "-" : "+";
+      });
+    });
+  });
+</script>
 
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://code.jquery.com/ui/1.13.0/jquery-ui.js"></script>
@@ -61,7 +64,7 @@
         placeholder: "sortable-placeholder",
         update: function(event, ui) {
           const sortedIds = $(this).sortable("toArray");
-          
+          console.log(sortedIds);
           // Perform AJAX request to update the order of employees in the backend
           // You will need to implement the backend logic for updating the order
 
@@ -69,14 +72,11 @@
           $.ajax({
             url: "{% url 'employee:update_supervisor' %}",
             method: "POST",
-            headers: {
-                "X-CSRFToken": csrfToken
-              },
             data: {
               sorted_ids: sortedIds
             },
             success: function(response) {
-              // Handle successful response
+              console.log(data);
             },
             error: function(xhr, textStatus, error) {
               // Handle error

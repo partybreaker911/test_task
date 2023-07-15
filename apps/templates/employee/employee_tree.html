@@ -1,0 +1,90 @@
+{% extends 'layouts/master.html' %}
+
+{% load i18n %}
+
+{% block content %}
+  <table class="table table-hover" id="employee-table">
+    <thead>
+      <tr>
+        <th>{% trans "Full Name" %}</th>
+        <th>{% trans "Position" %}</th>
+        <th>{% trans "Hire Date" %}</th>
+        <th>{% trans "Email" %}</th>
+        <th>{% trans "Supervisor" %}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for employee in employees %}
+        <tr id="{{ employee.id }}">
+          <td>
+            <span class="toggle" data-target=".supervisors-{{ employee.employee.id }}">+</span>
+            {{ employee.employee.full_name }}
+          </td>
+          <td>{{ employee.employee.position.position_name }}</td>
+          <td>{{ employee.employee.hire_date }}</td>
+          <td>{{ employee.employee.email }}</td>
+          <td>{{ employee.employee.supervisor.full_name }}</td>
+        </tr>
+        {% if employee.show_supervisors %}
+          {% for supervisor in employee.supervisors %}
+            <tr class="supervisors-{{ employee.employee.id }}" style="display: none;">
+              <td>
+                <span class="toggle" data-target=".supervisors-{{ supervisor.employee.id }}">+</span>
+                {{ supervisor.employee.full_name }}
+              </td>
+              <td>{{ supervisor.employee.position.position_name }}</td>
+              <td>{{ supervisor.employee.hire_date }}</td>
+              <td>{{ supervisor.employee.email }}</td>
+              <td>{{ supervisor.employee.supervisor.full_name }}</td>
+            </tr>
+          {% endfor %}
+        {% endif %}
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://code.jquery.com/ui/1.13.0/jquery-ui.js"></script>
+  <script>
+    $(document).ready(function() {
+      $('.toggle').click(function() {
+        const target = $(this).data('target');
+        $(target).toggle();
+        const icon = $(this).text();
+        $(this).text(icon === '+' ? '-' : '+');
+      });
+
+      $("#employee-table tbody").sortable({
+        helper: "clone",
+        opacity: 0.5,
+        cursor: "move",
+        placeholder: "sortable-placeholder",
+        update: function(event, ui) {
+          const sortedIds = $(this).sortable("toArray");
+          
+          // Perform AJAX request to update the order of employees in the backend
+          // You will need to implement the backend logic for updating the order
+
+          // Example AJAX request
+          $.ajax({
+            url: "{% url 'employee:update_supervisor' %}",
+            method: "POST",
+            headers: {
+                "X-CSRFToken": csrfToken
+              },
+            data: {
+              sorted_ids: sortedIds
+            },
+            success: function(response) {
+              // Handle successful response
+            },
+            error: function(xhr, textStatus, error) {
+              // Handle error
+              console.log(error);
+            }
+          });
+        }
+      });
+    });
+  </script>
+{% endblock content %}

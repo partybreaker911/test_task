@@ -68,7 +68,9 @@ THIRD_PARTY_APPS = [
     "crispy_bootstrap5",
 ]
 
-LOCAL_APPS = []
+LOCAL_APPS = [
+    "apps.employee",
+]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
@@ -89,11 +91,11 @@ AUTHENTICATION_BACKENDS = [
 # # https://docs.djangoproject.com/en/dev/ref/settings/#login-redirect-url
 from django.urls import reverse_lazy
 
-LOGIN_REDIRECT_URL = reverse_lazy("dashboard:dashboard")
+LOGIN_REDIRECT_URL = reverse_lazy("employee:employee_list")
 # https://docs.djangoproject.com/en/dev/ref/settings/#login-url
-LOGIN_URL = "account_login"
+# LOGIN_URL = "account_login"
 # https://docs.djangoproject.com/en/dev/ref/settings/#logout-url
-ACCOUNT_LOGOUT_REDIRECT_URL = "account_login"
+# ACCOUNT_LOGOUT_REDIRECT_URL = "account_login"
 # PASSWORDS
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#password-hashers

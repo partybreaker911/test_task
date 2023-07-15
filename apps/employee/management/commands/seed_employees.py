@@ -1,50 +1,82 @@
-from faker import Faker
-from random import randint
-from datetime import datetime, timedelta
-
+import random
+from uuid import uuid4
 from django.core.management.base import BaseCommand
+from faker import Faker
+from apps.employee.models import Employee, Position
 
-from apps.employee.models import Position, Employee
+fake = Faker()
 
 
 class Command(BaseCommand):
-    help = "Generate fake data for employees"
+    help = "Seed the database with employee data"
 
-    def handle(self, *args, **options):
-        fake = Faker()
+    def add_arguments(self, parser):
+        parser.add_argument(
+            "num_employees", type=int, help="Number of employees to generate"
+        )
+        parser.add_argument("num_levels", type=int, help="Number of hierarchy levels")
 
-        # Создание должностей
+    def create_positions(self, num_positions):
         positions = []
-        for _ in range(7):
+
+        for _ in range(num_positions):
             position_name = fake.job()
-            position = Position(position_name=position_name)
+            position = Position.objects.create(position_name=position_name)
             positions.append(position)
+
         Position.objects.bulk_create(positions)
 
-        # Генерация данных для сотрудников
-        employees = []
-        for _ in range(50000):
-            full_name = fake.name()
-            position = Position.objects.order_by("?").first()
-            hire_date = fake.date_between(start_date="-10y", end_date="today")
-            email = fake.email()
+    def handle(self, *args, **options):
+        num_employees = options["num_employees"]
+        num_levels = options["num_levels"]
 
-            employee = Employee(
-                full_name=full_name,
-                position=position,
-                hire_date=hire_date,
-                email=email,
+        self.create_positions(num_levels)
+
+        # Генерация начальника
+        boss_position = Position.objects.first()
+        boss = Employee.objects.create(
+            id=uuid4(),
+            full_name=fake.name(),
+            position=boss_position,
+            hire_date=fake.date_between(start_date="-5y", end_date="today"),
+            email=fake.email(),
+            supervisor=None,
+            show_supervisors=True,
+        )
+
+        # Генерация остальных сотрудников
+        for _ in range(num_employees - 1):
+            parent = random.choice(Employee.objects.all())
+            employee_position = random.choice(Position.objects.all())
+            employee = Employee.objects.create(
+                id=uuid4(),
+                full_name=fake.name(),
+                position=employee_position,
+                hire_date=fake.date_between(start_date="-5y", end_date="today"),
+                email=fake.email(),
+                supervisor=parent,
+                show_supervisors=True,
             )
-            employees.append(employee)
 
-        Employee.objects.bulk_create(employees)
+        # Обновление уровней иерархии
+        Employee.objects.rebuild()
 
-        # Назначение руководителей
-        employees = Employee.objects.all()
-        for employee in employees:
-            employee.supervisor = (
-                Employee.objects.exclude(id=employee.id).order_by("?").first()
-            )
-            employee.save()
+        # Генерация дополнительных уровней иерархии
+        for level in range(2, num_levels + 1):
+            employees = Employee.objects.filter(level=level - 1)
+            for employee in employees:
+                for _ in range(random.randint(1, 5)):
+                    subordinate_position = random.choice(Position.objects.all())
+                    subordinate = Employee.objects.create(
+                        id=uuid4(),
+                        full_name=fake.name(),
+                        position=subordinate_position,
+                        hire_date=fake.date_between(start_date="-5y", end_date="today"),
+                        email=fake.email(),
+                        supervisor=employee,
+                        show_supervisors=True,
+                    )
 
-        self.stdout.write(self.style.SUCCESS("Fake data generation completed!"))
+        self.stdout.write(
+            self.style.SUCCESS("Database seeding completed successfully.")
+        )

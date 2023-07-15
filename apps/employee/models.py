@@ -58,6 +58,28 @@ class Employee(models.Model):
         blank=True,
         verbose_name=_("Supervisor"),
     )
+    show_supervisors = models.BooleanField(default=True)
+
+    def transfer_supervisors(self, new_manager):
+        """
+        Update the supervisor of the current object with the provided new manager.
+
+        Parameters:
+            new_manager (str): The name of the new manager.
+
+        Returns:
+            None
+        """
+        self.supervisor.update(supervisor=new_manager)
+
+    def get_supervisors(self):
+        """
+        Retrieves all supervisors along with their associated positions.
+
+        :returns: A queryset of supervisors with related position information.
+        :rtype: QuerySet
+        """
+        return self.supervisor.all().select_related("position")
 
     class Meta:
         verbose_name = _("Employee")

@@ -1,0 +1,12 @@
+<div class="employee" style="margin-left: {{ depth }}em;" id="employee-{{ employee.id }}" onclick="toggleSubordinates(event, {{ employee.id }})">
+    {% if employee.employee_set.all|length > 0 %}
+      <span id="toggle-icon-{{ employee.id }}">+</span>
+    {% endif %}
+    {{ employee.full_name }}: <a href="">{{ employee.position }}</a>
+    <div id="subordinates-{{ employee.id }}" style="display: none;">
+      {% for supervisor in employee.employee_set.all %}
+        {% include "employees_structure/employee.html" with employee=supervisor depth=depth|add:1 %}
+      {% endfor %}
+    </div>
+  </div>
+  

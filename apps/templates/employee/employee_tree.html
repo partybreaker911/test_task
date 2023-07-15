@@ -4,6 +4,9 @@
 
 
 {% block content %}
-    
+{% for item in employees %}
+{{ employees }}
+    {% include "employees/partials/employee.html" with employee=item.employee depth=item.depth %}
+{% endfor %}   
 {% endblock content %}
     

@@ -38,11 +38,12 @@
                                 <table id="employee-table" class="table table-hover display" style="width:100%">
                                     <thead>
                                         <tr>
-                                            <th>Full Name</th>
-                                            <th>Position</th>
-                                            <th>Hire Date</th>
-                                            <th>Email</th>
-                                            <th>Supervisor</th>
+                                            <th>{% trans 'Full Name' %}</th>
+                                            <th>{% trans 'Position' %}</th>
+                                            <th>{% trans 'Hire Date' %}</th>
+                                            <th>{% trans 'Email' %}</th>
+                                            <th>{% trans 'Supervisor' %}</th>
+                                            <th>{% trans 'Actions' %}</th>
                                         </tr>
                                     </thead>
                                 </table>
@@ -77,7 +78,6 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.11.2/js/jquery.dataTables.min.js"></script>
 
-
 <script>
     $(document).ready(function() {
         $('#employee-table').DataTable({
@@ -94,6 +94,7 @@
             ],
         });
     });
+   
 </script>  
 {% endblock javascript %}
     

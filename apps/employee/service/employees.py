@@ -1,15 +1,29 @@
+from typing import List, Dict
+
 from django.db.models import F
 
 from apps.employee.models import Employee
 
 
 class EmployeeService:
-    @staticmethod
-    def _get_all_employee():
-        return Employee.objects.all()
+    """
+    Employee service class thats contains business logic for the employees
+    """
 
     @staticmethod
-    def _get_employee_data():
+    def _get_employee_data() -> List[Dict[str, object]]:
+        """
+        Get employee data from the database.
+
+        Returns:
+            list: A list of dictionaries containing employee data. Each dictionary contains the following keys:
+                - id (int): The employee's ID.
+                - full_name (str): The employee's full name.
+                - position__position_name (str): The name of the employee's position.
+                - hire_date (date): The date the employee was hired.
+                - email (str): The employee's email address.
+                - supervisor__full_name (str): The full name of the employee's supervisor.
+        """
         employees = Employee.objects.select_related("parent").values(
             "id",
             "full_name",
@@ -20,3 +34,34 @@ class EmployeeService:
         )
         data = list(employees)
         return data
+
+    @staticmethod
+    def _get_employee_with_depth(employee, depth=0):
+        """
+        Returns a dictionary containing information about the given employee and their supervisors up to a certain depth.
+
+        Parameters:
+        - employee: The employee object for which to retrieve information.
+        - depth (optional): The depth up to which to retrieve supervisor information. Defaults to 0.
+
+        Returns:
+        A dictionary with the following keys:
+        - "employee": The given employee object.
+        - "depth": The depth of the employee in the supervisor hierarchy.
+        - "show_supervisors": A boolean indicating whether to include supervisor information for the employee.
+        - "supervisors": A list of dictionaries, each containing information about a supervisor of the employee up to the specified depth.
+        """
+        return {
+            "employee": employee,
+            "depth": depth,
+            "show_supervisors": employee.show_supervisors,
+            "supervisors": [
+                EmployeeService._get_employee_with_depth(e, depth + 1)
+                for e in employee.employee_set.all()
+                if employee.show_supervisors
+            ],
+        }
+
+    @staticmethod
+    def _get_top_level_employee():
+        return Employee.objects.filter(supervisor__isnull=True)

@@ -61,10 +61,20 @@
                 <div class="card-body py-4 px-4">
                     <div class="d-flex align-items-center">
                         <div class="ms-3 name">
+                            
+                        {% if request.user.is_authenticated %}
+                                
+                            <h5 class="text-muted"><a href="{% url 'employee:employee_tree' %}"><i class="bi bi-person"></i>
+                                    Employee tree</a></h5>
+                                
+                            {% else %}
+                                
                             <h5 class="font-bold"><a href="{% url 'employee:employee_list' %}"><i class="bi bi-person"></i>
                                 Employee table</a></h5>
-                            <h5 class="text-muted"><a href=""><i class="bi bi-person"></i>
-                                Employee tree</a></h5>
+
+                        {% endif %}
+                                
+
                         </div>
                     </div>
                 </div>

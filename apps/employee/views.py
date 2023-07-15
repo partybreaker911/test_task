@@ -74,6 +74,24 @@ class UpdateEmployeeSupervisor(View):
     service = EmployeeService()
 
     def post(self, request):
+        """
+        Handle the POST request to update the supervisor of an employee.
+
+        Parameters:
+            request (HttpRequest): The HTTP request object.
+                - POST parameters:
+                    - employee_id (int): The ID of the employee.
+                    - supervisor_id (int): The ID of the new supervisor.
+
+        Returns:
+            JsonResponse: The JSON response containing the success status and a message.
+                - success (bool): True if the supervisor was successfully updated, False otherwise.
+                - message (str): A message indicating the result of the update.
+
+        Raises:
+            EmployeeNotFoundError: If either the employee or the new supervisor is not found.
+            Exception: If any other exception occurs during the update.
+        """
         employee_id = request.POST.get("employee_id")
         supervisor_id = request.POST.get("supervisor_id")
 

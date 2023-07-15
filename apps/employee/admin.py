@@ -14,4 +14,12 @@ class EmployeeAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Employee, EmployeeAdmin)
-admin.site.register(Position)
+
+
+class PositionAdmin(admin.ModelAdmin):
+    list_display = [
+        "position_name",
+    ]
+
+
+admin.site.register(Position, PositionAdmin)

@@ -1,6 +1,7 @@
 from django.views import View
 from django.shortcuts import render
 from django.http import JsonResponse
+from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.mixins import LoginRequiredMixin
 
 from apps.employee.service.employees import EmployeeService
@@ -67,3 +68,31 @@ class EmployeeTreeView(LoginRequiredMixin, View):
             "employees": employees,
         }
         return render(request, self.template_name, context)
+
+
+class UpdateEmployeeSupervisor(View):
+    service = EmployeeService()
+
+    def post(self, request):
+        employee_id = request.POST.get("employee_id")
+        supervisor_id = request.POST.get("supervisor_id")
+
+        try:
+            self.service._update_supervisor(employee_id, supervisor_id)
+            response_data = {
+                "success": True,
+                "message": _("Successfully updated supervisor"),
+            }
+        except self.service.EmployeeNotFoundError:
+            response_data = {
+                "success": False,
+                "message": _("Employee or new supervisor not found."),
+            }
+        except Exception as e:
+            response_data = {
+                "success": False,
+                "message": str(e),
+            }
+        return JsonResponse(response_data)
+
+        # employee = self.service._get_employee_and_supervisor_by_id(employee_id)

@@ -1,6 +1,7 @@
-from typing import List, Dict, QuerySet
+import uuid
+from typing import List, Dict
 
-from django.db.models import F
+from django.db.models import F, QuerySet
 
 from apps.employee.models import Employee
 
@@ -9,6 +10,16 @@ class EmployeeService:
     """
     Employee service class thats contains business logic for the employees
     """
+
+    @staticmethod
+    def _update_supervisor(employee_id: uuid, new_supervisor_id: uuid) -> None:
+        """
+        Updates the supervisor ID of an employee.
+
+        :param employee_id: The ID of the employee to be updated.
+        :param new_supervisor_id: The ID of the new supervisor.
+        """
+        Employee.objects.filter(id=employee_id).update(supervisor_id=new_supervisor_id)
 
     @staticmethod
     def _get_employee_data() -> List[Dict[str, object]]:

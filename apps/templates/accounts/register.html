@@ -1,0 +1,15 @@
+{% extends 'layouts/auth.html' %}
+
+{% load i18n %}
+
+{% load crispy_forms_tags %}
+
+{% block content %}
+<h2>Регистрация</h2>
+<form method="post">
+  {% csrf_token %}
+  {{ form|crispy}}
+  <button class="btn btn-primary" type="submit">Войти</button>
+</form>
+{% endblock content %}
+    

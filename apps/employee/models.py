@@ -4,6 +4,8 @@ from django.db import models
 from django.core import validators
 from django.utils.translation import gettext_lazy as _
 
+from mptt.models import MPTTModel, TreeForeignKey
+
 
 class Position(models.Model):
     id = models.UUIDField(
@@ -23,7 +25,7 @@ class Position(models.Model):
         return self.position_name
 
 
-class Employee(models.Model):
+class Employee(MPTTModel):
     id = models.UUIDField(
         _("Employee id"),
         primary_key=True,
@@ -50,7 +52,7 @@ class Employee(models.Model):
     )
     hire_date = models.DateField()
     email = models.EmailField()
-    supervisor = models.ForeignKey(
+    parent = TreeForeignKey(
         "self",
         on_delete=models.SET_NULL,
         related_name="children",
@@ -70,7 +72,7 @@ class Employee(models.Model):
         Returns:
             None
         """
-        self.supervisor.update(supervisor=new_manager)
+        self.parent.update(parent=new_manager)
 
     def get_supervisors(self):
         """
@@ -79,7 +81,7 @@ class Employee(models.Model):
         :returns: A queryset of supervisors with related position information.
         :rtype: QuerySet
         """
-        return self.supervisor.all().select_related("position")
+        return self.parent.all().select_related("position")
 
     class Meta:
         verbose_name = _("Employee")

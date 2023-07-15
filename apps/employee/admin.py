@@ -10,7 +10,7 @@ class EmployeeAdmin(admin.ModelAdmin):
         "email",
         "position",
         "hire_date",
-        "supervisor",
+        "parent",
     ]
 
 

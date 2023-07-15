@@ -1,9 +1,99 @@
 {% extends 'layouts/master.html' %}
 
-{% load i18n %}
+{% load i18n static %}
 
 
 {% block content %}
-    
+<div class="page-heading">
+    <h3>{% trans 'Employee Table' %}</h3>
+</div>
+<div class="page-content">
+    <section class="row">
+        
+        {% if messages %}
+        <div class="alert alert-dismissible alert-success">
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            {% for message in messages %}
+            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+            {% endfor %}
+                
+        </div>            
+        {% endif %}
+            
+        <div class="col-12 col-lg-9">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h4><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-file-earmark-binary" viewBox="0 0 16 16">
+                                <path d="M7.05 11.885c0 1.415-.548 2.206-1.524 2.206C4.548 14.09 4 13.3 4 11.885c0-1.412.548-2.203 1.526-2.203.976 0 1.524.79 1.524 2.203zm-1.524-1.612c-.542 0-.832.563-.832 1.612 0 .088.003.173.006.252l1.559-1.143c-.126-.474-.375-.72-.733-.72zm-.732 2.508c.126.472.372.718.732.718.54 0 .83-.563.83-1.614 0-.085-.003-.17-.006-.25l-1.556 1.146zm6.061.624V14h-3v-.595h1.181V10.5h-.05l-1.136.747v-.688l1.19-.786h.69v3.633h1.125z"></path>
+                                <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5v2z"></path>
+                              </svg>
+                                {% trans 'Ajax Employee with datatables' %}</h4>
+                        </div>
+                        <div class="card-body"> 
+
+                
+                            <div class="table-responsive">
+                                <table id="employee-table" class="table table-hover display" style="width:100%">
+                                    <thead>
+                                        <tr>
+                                            <th>Full Name</th>
+                                            <th>Position</th>
+                                            <th>Hire Date</th>
+                                            <th>Email</th>
+                                            <th>Supervisor</th>
+                                        </tr>
+                                    </thead>
+                                </table>
+                            </div>
+                                               
+                            <p class="card-subtitle text-muted text-center"> {% trans 'You have no files yet!' %}</p>    
+                              
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-lg-3">
+            <div class="card">
+                <div class="card-body py-4 px-4">
+                    <div class="d-flex align-items-center">
+                        <div class="ms-3 name">
+                            <h5 class="font-bold"><a href="{% url 'employee:employee_list' %}"><i class="bi bi-person"></i>
+                                Employee table</a></h5>
+                            <h5 class="text-muted"><a href="{% url 'employee:employee_tree' %}"><i class="bi bi-person"></i>
+                                Employee tree</a></h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
 {% endblock content %}
+
+{% block javascript %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.2/js/jquery.dataTables.min.js"></script>
+
+
+<script>
+    $(document).ready(function() {
+        $('#employee-table').DataTable({
+            ajax: {
+                url: '{% url "employee:employee_table_ajax" %}',
+                dataSrc: 'data'
+            },
+            columns: [
+                { data: 'full_name' },
+                { data: 'position__position_name' },
+                { data: 'hire_date' },
+                { data: 'email' },
+                { data: 'supervisor__full_name'},
+            ],
+        });
+    });
+</script>  
+{% endblock javascript %}
     

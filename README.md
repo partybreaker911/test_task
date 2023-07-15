@@ -1,4 +1,7 @@
 ## Test case 
+
+All business logic is placed in a separate layer from view, such as `service`
+
 ### How to run project
 
 -   For local build, use command like:
@@ -21,10 +24,14 @@ this command generate superuser with  this credentials:
 
 -   For seed database employees, use command:
 
-        $ docker-compose -f local.yml run django  python manage.py seed_employees <count_of_records> <count_of_hierarchy>
+        $ docker-compose -f local.yml run django  python manage.py seed_employees
 
 - If you need to delete all employees, use: 
 
         $ docker-compose -f local.yml run django python manage.py delete_employees
 
--   For cathing all email's for user auth and registration used `mailhog` you can access it from web browser using this ip address in your local deployment 0.0.0.0:8025
+### TODO
+
+- Add ajax drug&drop
+- Add tests
+- Add github ci

@@ -1,48 +1,129 @@
-from django.views import View
-from django.shortcuts import render
-from django.http import HttpRequest, HttpResponse
+from django.views.generic import View
+from django.http import JsonResponse
+from django.shortcuts import render, redirect
 from django.utils.translation import gettext_lazy as _
+from django.contrib.auth.mixins import LoginRequiredMixin
 
+from apps.employee.forms import EmployeeForm
 from apps.employee.service.employees import EmployeeService
 
 
 class EmployeeListView(View):
-    employee_service = EmployeeService()
     template_name = "employee/employee_list.html"
-    items_per_page = 15
+    service = EmployeeService()
 
-    def get(self, request: HttpRequest) -> HttpResponse:
+    def get(self, request):
         """
-        Retrieves a paginated list of employees based on the provided parameters.
+        Get method that handles the HTTP GET request.
 
         Args:
             request (HttpRequest): The HTTP request object.
 
         Returns:
-            HttpResponse: The HTTP response object containing the rendered template.
+            HttpResponse: The rendered HTML response.
         """
-        sort_by = request.GET.get("sort_by", "first_name")
-        page_number = int(request.GET.get("page", 1))
-        search_query = request.GET.get("search", "").strip()
+        return render(request, self.template_name)
 
-        employees = (
-            self.employee_service.search_employees(search_query, self.items_per_page)
-            if search_query
-            else self.employee_service.get_paginated_employees(
-                sort_by, page_number, self.items_per_page
-            )
-        )
+
+class EmployeeTableAjax(View):
+    service = EmployeeService()
+
+    def get(self, request):
+        """
+        Get method to retrieve employee data.
+
+        Args:
+            request: The HTTP request object.
+
+        Returns:
+            JsonResponse: The JSON response containing the employee data.
+        """
+        employees_data = self.service._get_employee_data()
 
         context = {
-            "employees": employees,
-            "has_previous": employees.has_previous(),
-            "has_next": employees.has_next(),
-            "previous_page_number": employees.previous_page_number()
-            if employees.has_previous()
-            else None,
-            "next_page_number": employees.next_page_number()
-            if employees.has_next()
-            else None,
+            "data": employees_data,
         }
+        return JsonResponse(context)
 
+
+class EmployeeEditView(LoginRequiredMixin, View):
+    template_name = "employee/employee_edit.html"
+    service = EmployeeService()
+
+    def get(self, request, **kwargs):
+        employee_id = kwargs["id"]
+        employee = self.service._get_employee_by_id(employee_id)
+        form = EmployeeForm(instance=employee)
+        context = {
+            "form": form,
+        }
         return render(request, self.template_name, context)
+
+    def post(self, request, **kwargs):
+        employee_id = kwargs["id"]
+        data = request.POST
+        if self.service._update_employee(employee_id, data):
+            return redirect("employee:employee_list")
+        else:
+            form = EmployeeForm(data)
+            context = {
+                "form": form,
+            }
+            return render(request, self.template_name, context)
+
+
+# class EmployeeDetailView(DetailView):
+#     pass
+
+
+# class EmployeeTreeView(LoginRequiredMixin, View):
+#     template_name = "employee/employee_tree.html"
+#     service = EmployeeService()
+
+#     def get(self, request):
+#         """
+#         Get the top-level employees and their respective subordinates.
+
+#         Parameters:
+#             request (HttpRequest): The request object.
+
+#         Returns:
+#             HttpResponse: The rendered response containing the employees and their subordinates.
+#         """
+#         top_level_employees = self.service._get_top_level_employee()
+#         employees = [
+#             self.service._get_employee_with_depth(e) for e in top_level_employees
+#         ]
+
+#         context = {
+#             "employees": employees,
+#         }
+#         return render(request, self.template_name, context)
+
+
+# class UpdateEmployeeSupervisor(View):
+#     service = EmployeeService()
+
+#     def post(self, request):
+#         employee_id = request.POST.get("employee_id")
+#         supervisor_id = request.POST.get("supervisor_id")
+
+#         try:
+#             self.service._update_supervisor(employee_id, supervisor_id)
+#             response_data = {
+#                 "success": True,
+#                 "message": _("Successfully updated supervisor"),
+#             }
+#         except self.service.EmployeeNotFoundError:
+#             response_data = {
+#                 "success": False,
+#                 "message": _("Employee or new supervisor not found."),
+#             }
+#         except Exception as e:
+#             response_data = {
+#                 "success": False,
+#                 "message": str(e),
+#             }
+#         return JsonResponse(response_data)
+
+# employee = self.service._get_employee_and_supervisor_by_id(employee_id)

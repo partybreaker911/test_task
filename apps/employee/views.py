@@ -4,6 +4,7 @@ from django.shortcuts import render, redirect
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.mixins import LoginRequiredMixin
 
+from apps.employee.models import Employee
 from apps.employee.forms import EmployeeForm
 from apps.employee.service.employees import EmployeeService
 
@@ -95,7 +96,7 @@ class EmployeeEditView(LoginRequiredMixin, View):
 
 
 class EmployeeTreeView(LoginRequiredMixin, View):
-    template_name = "employee/employee_tree.html"
+    template_name = "employee/employee_tree2.html"
     service = EmployeeService()
 
     def get(self, request: HttpRequest) -> HttpResponse:
@@ -107,6 +108,7 @@ class EmployeeTreeView(LoginRequiredMixin, View):
         Returns:
             The rendered response containing the employees and their subordinates.
         """
+
         top_level_employees = self.service._get_top_level_employee()
         employees = [
             self.service._get_employee_with_depth(e) for e in top_level_employees

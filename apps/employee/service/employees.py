@@ -27,7 +27,7 @@ class EmployeeService:
         :param employee_id: The ID of the employee to update.
         :param new_data: The new employee data to update.
         """
-        employee = Employee.objects.get(id=employee_id)
+        employee = EmployeeService._get_employee_by_id(employee_id)
         form = EmployeeForm(instance=employee, data=new_data)
         if form.is_valid():
             form.save()

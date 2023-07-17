@@ -65,10 +65,7 @@
         update: function(event, ui) {
           const sortedIds = $(this).sortable("toArray");
           console.log(sortedIds);
-          // Perform AJAX request to update the order of employees in the backend
-          // You will need to implement the backend logic for updating the order
 
-          // Example AJAX request
           $.ajax({
             url: "{% url 'employee:update_supervisor' %}",
             method: "POST",

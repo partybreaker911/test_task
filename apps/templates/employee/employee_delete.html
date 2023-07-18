@@ -1,0 +1,40 @@
+{% extends 'layouts/master.html' %}
+
+{% load i18n %}
+
+{% block content %}
+<div class="page-heading">
+    <div class="page-title">
+        <div class="row">
+            <div class="col-12 col-md-6 order-md-1 order-last">
+                <h3>{% trans 'Deleting employee' %}</h3>
+                <p class="text-subtitle text-muted">{% trans 'Deleting employee' %}</p>
+            </div>
+            <div class="col-12 col-md-6 order-md-2 order-first">
+                <nav aria-label="breadcrumb" class="breadcrumb-header float-start float-lg-end">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{% url 'employee:employee_list' %}">{% trans 'Employee list' %}</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">{% trans 'Deleting employee' %}</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="page-content">
+    <div class="card">
+        <div class="card-header">
+            <h5 class="text-center">{% trans 'Delete employee' %} </h5>
+        </div>
+        <div class="card-body">
+            <p class="text-center">{% trans 'Are you sure you want to delete the employee ' %}"{{ employee.full_name }}"?</p>
+            <form method="post">
+              {% csrf_token %}
+              <input class="btn btn-primary" type="submit" value="{% trans 'Delete' %}">
+              <a class="btn btn-secondary" href="{% url 'employee:employee_list' %}">{% trans 'Cancel' %}</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+    

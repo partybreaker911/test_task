@@ -83,6 +83,9 @@ class Employee(MPTTModel):
         """
         return self.parent.all().select_related("position")
 
+    def __str__(self) -> str:
+        return self.full_name
+
     class Meta:
         verbose_name = _("Employee")
         verbose_name_plural = _("Employees")

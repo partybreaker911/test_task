@@ -1,25 +1,9 @@
 {% extends 'layouts/master.html' %}
 
 {% load i18n %}
-
+{% load mptt_tags  %}
 {% block content %}
-{% for supervisor in supervisors %}
-<li>
-  {{ supervisor.full_name }}
-  {% if supervisor.children.exists %}
-    <ul>
-      {% for subordinate in supervisor.children.all %}
-        <li>
-          {{ subordinate.full_name }}
-          {% if subordinate.children.exists %}
-            {% comment %} {% include 'employee/subordinate_children.html' with supervisor=subordinate %} {% endcomment %}
-          {% endif %}
-        </li>
-      {% endfor %}
-    </ul>
-  {% endif %}
-</li>
-{% endfor %}
+
 
 <style>
   .child-row {
@@ -29,7 +13,23 @@
     cursor: pointer;
   }
 </style>
+<ul class="list-group tree">
+  {% recursetree employees %}
+    <li class="list-group-item">
+        {{ employees.full_name }} ({{node.position}})
+        {% if not node.is_leaf_node %}
+          <ul class=" subtree">
+            {{ children }}
+          </ul>
+        {% endif %}
+    </li>
+    {% endrecursetree %}
+</ul>
 
+{% endblock content %}
+
+
+{% block javascript %}
 <script>
   document.addEventListener("DOMContentLoaded", function () {
     const toggleButtons = document.querySelectorAll(".toggle-children");
@@ -83,5 +83,6 @@
         }
       });
     });
-  </script>
-{% endblock content %}
+  </script>  
+{% endblock javascript %}
+  

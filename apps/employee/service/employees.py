@@ -1,106 +1,173 @@
-import uuid
-from typing import List, Dict
+from uuid import uuid4
+from datetime import datetime
+from typing import List
 
-from django.db.models import F, QuerySet
+from django.db.models import Q
+from django.core.paginator import Paginator
+from django.db.models.query import QuerySet
+from django.core.exceptions import ObjectDoesNotExist
+from django.utils.translation import gettext_lazy as _
 
 from apps.employee.models import Employee
-from apps.employee.forms import EmployeeForm
 
 
 class EmployeeService:
-    """
-    Employee service class thats contains business logic for the employees
-    """
-
     @staticmethod
-    def _get_employee_by_id(employee_id: uuid) -> Employee:
+    def create_employee(employee) -> None:
         """
-        Get an employee by ID.
-        """
-        return Employee.objects.get(id=employee_id)
-
-    @staticmethod
-    def _update_employee(employee_id: uuid, new_data: dict) -> None:
-        """
-        Updates an employee's data.
-
-        :param employee_id: The ID of the employee to update.
-        :param new_data: The new employee data to update.
-        """
-        employee = EmployeeService._get_employee_by_id(employee_id)
-        form = EmployeeForm(instance=employee, data=new_data)
-        if form.is_valid():
-            form.save()
-            return True
-        return False
-
-    @staticmethod
-    def _update_supervisor(employee_id: uuid, new_supervisor_id: uuid) -> None:
-        """
-        Updates the supervisor ID of an employee.
-
-        :param employee_id: The ID of the employee to be updated.
-        :param new_supervisor_id: The ID of the new supervisor.
-        """
-        Employee.objects.filter(id=employee_id).update(supervisor_id=new_supervisor_id)
-
-    @staticmethod
-    def _get_employee_data() -> List[Dict[str, object]]:
-        """
-        Get employee data from the database.
-
-        Returns:
-            list: A list of dictionaries containing employee data. Each dictionary contains the following keys:
-                - id (int): The employee's ID.
-                - full_name (str): The employee's full name.
-                - position__position_name (str): The name of the employee's position.
-                - hire_date (date): The date the employee was hired.
-                - email (str): The employee's email address.
-                - supervisor__full_name (str): The full name of the employee's supervisor.
-        """
-        employees = Employee.objects.select_related("parent").values(
-            "id",
-            "full_name",
-            "position__position_name",
-            "hire_date",
-            "email",
-            "parent__full_name",
-        )
-        data = list(employees)
-        return data
-
-    @staticmethod
-    def _get_employee_with_depth(employee, depth=0):
-        """
-        Returns a dictionary containing information about the given employee and their supervisors up to a certain depth.
+        Create a new employee.
 
         Parameters:
-        - employee: The employee object for which to retrieve information.
-        - depth (optional): The depth up to which to retrieve supervisor information. Defaults to 0.
+            employee (Employee): The employee object to create.
 
         Returns:
-        A dictionary with the following keys:
-        - "employee": The given employee object.
-        - "depth": The depth of the employee in the supervisor hierarchy.
-        - "show_supervisors": A boolean indicating whether to include supervisor information for the employee.
-        - "supervisors": A list of dictionaries, each containing information about a supervisor of the employee up to the specified depth.
+            None
         """
-        return {
-            "employee": employee,
-            "depth": depth,
-            "show_supervisors": employee.show_supervisors,
-            "supervisors": [
-                EmployeeService._get_employee_with_depth(e, depth + 1)
-                for e in employee.children.all()
-                if employee.show_supervisors
-            ],
-        }
+        employee.save()
 
     @staticmethod
-    def _get_top_level_employee() -> QuerySet[Employee]:
+    def _get_all_employees() -> List[Employee]:
         """
-        Retrieves the top level employee(s) from the database.
+        Retrieves all employees from the database.
 
-        :return: A QuerySet of Employee objects representing the top level employee(s).
+        Returns:
+            List[Employee]: A list of Employee objects representing all the employees.
         """
-        return Employee.objects.filter(supervisor__isnull=True)
+        return Employee.objects.all()
+
+    @staticmethod
+    def _get_supervisors(employee_id: int) -> List[Employee]:
+        """
+        Get the supervisors of an employee.
+
+        Args:
+            employee_id (int): The ID of the employee.
+
+        Returns:
+            List[Employee]: A list of supervisor employees.
+        """
+        employee = EmployeeService._get_employee_by_id(employee_id)
+        supervisors = Employee.objects.filter(parent=employee).select_related(
+            "position"
+        )
+        return supervisors
+
+    @staticmethod
+    def _get_employee_by_id(employee_id: uuid4) -> Employee:
+        """
+        Retrieves a single employee based on the provided employee ID. If no such employee
+        exists an Exception will be thrown.
+
+        Args:
+            employee_id: The ID of the requested Employee.
+
+        Returns:
+            Employee: The requested Employee.
+        """
+        try:
+            employee = Employee.objects.get(pk=employee_id)
+            return employee
+        except Exception:
+            raise ValueError(_("Employee not found"))
+
+    @staticmethod
+    def _get_sorted_employees(sort_by: str) -> QuerySet:
+        """
+        Retrieves a sorted list of employees based on the provided sort field.
+
+        Args:
+            sort_by: The field to sort the employees by. Must be one of the following: "full_name",
+                    "position", "hire_date", "email", "supervisor".
+
+        Returns:
+            QuerySet: A sorted QuerySet of Employee objects.
+        """
+        valid_sort_fields = [
+            "full_name",
+            "position",
+            "hire_date",
+            "email",
+            "parent",
+        ]
+        if sort_by not in valid_sort_fields:
+            sort_by = "parent"
+
+        return Employee.objects.order_by(sort_by)
+
+    @staticmethod
+    def _get_paginated_employees(
+        sort_by: str, page_number: int, items_per_page: int
+    ) -> List:
+        """
+        Retrieves a paginated list of employees based on the given sorting criteria.
+
+        Args:
+            sort_by: The field to sort the employees by. Can be one of 'name', 'age', or 'salary'.
+            page_number: The page number of the results to retrieve.
+            items_per_page: The number of items to display per page.
+
+        Returns:
+            Page: A Page object containing the requested employees.
+        """
+        employees = EmployeeService._get_sorted_employees(sort_by)
+
+        paginator = Paginator(employees, items_per_page)
+        page = paginator.get_page(page_number)
+
+        return page
+
+    @staticmethod
+    def _search_employees(
+        search_query: str, items_per_page: int = 15
+    ) -> List[Employee]:
+        """
+        Search employees by the given query and paginate the results.
+
+        Args:
+            search_query: The query string to search for employees.
+            items_per_page: The number of items per page (default: 15).
+
+        Returns:
+            A List object containing a subset of matching employees.
+        """
+        try:
+            search_date = datetime.strptime(search_query, "%Y-%m-%d")
+            employees = Employee.objects.filter(
+                Q(full_name__icontains=search_query)
+                | Q(email__icontains=search_query)
+                | Q(position__icontains=search_query)
+                | Q(parent__full_name__icontains=search_query)
+                | Q(
+                    hire_date__date__gte=search_date
+                )  # Поиск даты больше или равной указанной
+                | Q(
+                    hire_date__date__lte=search_date
+                )  # Поиск даты меньше или равной указанной
+            )
+        except ValueError:
+            employees = Employee.objects.none()
+        paginator = Paginator(employees, items_per_page)
+
+        try:
+            page = paginator.get_page(1)
+        except EmptyPage:
+            return None
+        return page
+
+    @staticmethod
+    def _delete_employee(employee_id: int) -> bool:
+        """
+        Delete an employee with the given ID.
+
+        Args:
+            employee_id (int): The ID of the employee to delete.
+
+        Returns:
+            bool: True if the employee was successfully deleted, False otherwise.
+        """
+        try:
+            employee = Employee.objects.get(id=employee_id)
+            employee.delete()
+            return True
+        except ObjectDoesNotExist:
+            return False

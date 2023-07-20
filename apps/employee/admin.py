@@ -6,7 +6,7 @@ from apps.employee.models import Employee, Position
 
 
 class EmployeeMPTTModelAdmin(DraggableMPTTAdmin):
-    expand_tree_by_default = True
+    expand_tree_by_default = False
 
 
 admin.site.register(Employee, EmployeeMPTTModelAdmin)

@@ -1,9 +1,8 @@
 from typing import Any, Dict, Optional
 
-from django.db import models
+from django.shortcuts import render
 from django.urls import reverse_lazy
 from django.db.models.query import QuerySet
-from django.shortcuts import render, redirect
 from django.http import HttpRequest, HttpResponse
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -15,11 +14,11 @@ from django.views.generic import (
     CreateView,
 )
 from apps.employee.forms import EmployeeForm
-from apps.employee.service.employees import EmployeeService
+from apps.employee.service.employees import Employee_service
 
 
 class EmployeeListView(View):
-    employee_service = EmployeeService()
+    employee_service = Employee_service()
     template_name = "employee/employee_list.html"
     items_per_page = 15
 
@@ -63,7 +62,7 @@ class EmployeeListView(View):
 class EmployeeUpdateView(LoginRequiredMixin, UpdateView):
     template_name = "employee/employee_edit.html"
     form_class = EmployeeForm
-    service = EmployeeService()
+    employee_service = Employee_service()
     success_url = reverse_lazy("employee:employee_list")
 
     def get_object(self, queryset: Optional[QuerySet] = None) -> object:
@@ -76,12 +75,12 @@ class EmployeeUpdateView(LoginRequiredMixin, UpdateView):
         Returns:
             object: The object fetched using the provided queryset.
         """
-        return self.service._get_employee_by_id(self.kwargs["employee_id"])
+        return self.employee_service._get_employee_by_id(self.kwargs["employee_id"])
 
 
 class EmployeeDeleteView(LoginRequiredMixin, DeleteView):
     template_name = "employee/employee_delete.html"
-    service = EmployeeService()
+    employee_service = Employee_service()
     success_url = reverse_lazy("employee:employee_list")
 
     def delete(self, request: HttpRequest, *args: list, **kwargs: dict) -> HttpResponse:
@@ -98,7 +97,7 @@ class EmployeeDeleteView(LoginRequiredMixin, DeleteView):
                         If the employee is not found, returns an HttpResponse with a status code of 404.
         """
         employee_id = self.kwargs["employee_id"]
-        result = self.service._delete_employee(employee_id)
+        result = self.employee_service._delete_employee(employee_id)
 
         if result:
             return super().delete(request, *args, **kwargs)
@@ -117,7 +116,7 @@ class EmployeeDeleteView(LoginRequiredMixin, DeleteView):
         """
         context = super().get_context_data(**kwargs)
         employee_id = self.kwargs["employee_id"]
-        employee = self.service._get_employee_by_id(employee_id)
+        employee = self.employee_service._get_employee_by_id(employee_id)
         context["employee"] = employee
         return context
 
@@ -144,22 +143,22 @@ class EmployeeDeleteView(LoginRequiredMixin, DeleteView):
         :return: The queryset for the current instance.
         :rtype: QuerySet
         """
-        return self.service._get_all_employees()
+        return self.employee_service._get_all_employees()
 
 
 class EmployeeDetailView(DetailView):
     template_name = "employee/employee_detail.html"
-    service = EmployeeService()
+    employee_service = Employee_service()
     pk_url_kwarg = "employee_id"
 
     def get_queryset(self) -> QuerySet:
         """
-        Retrieve all employees from the service.
+        Retrieve all employees from the employe_service.
 
         Returns:
             QuerySet: List of all employees.
         """
-        return self.service._get_all_employees()
+        return self.employee_service._get_all_employees()
 
     def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
         """
@@ -174,7 +173,7 @@ class EmployeeDetailView(DetailView):
         """
         context = super().get_context_data(**kwargs)
         employee = self.get_object()
-        supervisors = self.service._get_supervisors(employee.id)
+        supervisors = self.employee_service._get_supervisors(employee.id)
         context["supervisors"] = supervisors
         return context
 
@@ -182,7 +181,7 @@ class EmployeeDetailView(DetailView):
 class EmployeeCreateView(LoginRequiredMixin, CreateView):
     template_name = "employee/employee_create.html"
     form_class = EmployeeForm
-    service = EmployeeService()
+    employee_service = Employee_service()
     success_url = reverse_lazy("employee:employee_list")
 
     def form_valid(self, form) -> Any:
@@ -196,130 +195,5 @@ class EmployeeCreateView(LoginRequiredMixin, CreateView):
             The result of calling the `form_valid` method of the parent class.
         """
         employee = form.save(commit=False)
-        self.service._create_employee(employee)
+        self.employee_service._create_employee(employee)
         return super().form_valid(form)
-
-
-# class EmployeeListView(View):
-#     template_name = "employee/employee_list.html"
-#     service = EmployeeService()
-
-#     def get(self, request: HttpRequest) -> HttpResponse:
-#         """Handles the HTTP GET request.
-
-#         Args:
-#             request: The HTTP request object.
-
-#         Returns:
-#             The rendered HTML response.
-#         """
-#         return render(request, self.template_name)
-
-
-# class EmployeeTableAjax(View):
-#     service = EmployeeService()
-
-#     def get(self, request: HttpRequest) -> JsonResponse:
-#         """Retrieve employee data.
-
-#         Args:
-#             request: The HTTP request object.
-
-#         Returns:
-#             JsonResponse: The JSON response containing the employee data.
-#         """
-#         employees_data = self.service._get_employee_data()
-
-#         context = {
-#             "data": employees_data,
-#         }
-
-#         return JsonResponse(context)
-
-
-# class EmployeeEditView(LoginRequiredMixin, UpdateView):
-#     template_name = "employee/employee_edit.html"
-#     form_class = EmployeeForm
-#     service = EmployeeService()
-
-#     def get_object(self, queryset=None):
-#         return self.service._get_employee_by_id(self.kwargs["id"])
-
-
-# class EmployeeDeleteView(LoginRequiredMixin, DeleteView):
-#     template_name = "employee/employee_delete.html"
-#     service = EmployeeService()
-
-#     def delete(self, request: HttpRequest, *args, **kwargs):
-#         """
-#         Delete an employee.
-
-#         Args:
-#             request (HttpRequest): The HTTP request object.
-#             *args: Variable length argument list.
-#             **kwargs: Arbitrary keyword arguments.
-
-#         Returns:
-#             The result of deleting the employee.
-#         """
-#         return self.service._delete_employee(self.get_object())
-
-
-# class EmployeeTreeView(LoginRequiredMixin, View):
-#     template_name = "employee/employee_tree.html"
-#     service = EmployeeService()
-
-#     def get(self, request: HttpRequest) -> HttpResponse:
-#         """Get the top-level employees and their respective subordinates.
-
-#         Args:
-#             request: The request object.
-
-#         Returns:
-#             The rendered response containing the employees and their subordinates.
-#         """
-
-#         top_level_employees = self.service._get_top_level_employee()
-#         employees = [
-#             self.service._get_employee_with_depth(e) for e in top_level_employees
-#         ]
-
-#         context = {
-#             "employees": employees,
-#         }
-#         return render(request, self.template_name, context)
-
-
-# class UpdateEmployeeSupervisor(View):
-#     service = EmployeeService()
-
-#     def post(self, request: HttpRequest) -> JsonResponse:
-#         """
-#         Handles the POST request for updating the supervisor of an employee.
-
-#         Args:
-#             request: The HTTP request object containing the employee_id and supervisor_id.
-
-#         Returns:
-#             The JSON response object containing the success status and message.
-#         """
-#         employee_id = request.POST.get("employee_id")
-#         supervisor_id = request.POST.get("supervisor_id")
-
-#         try:
-#             self.service._update_supervisor(employee_id, supervisor_id)
-#             response_data = {
-#                 "success": True,
-#                 "message": _("Successfully updated supervisor"),
-#             }
-#         except self.service.EmployeeNotFoundError:
-#             response_data = {
-#                 "success": False,
-#                 "message": _("Employee or new supervisor not found."),
-#             }
-#         except Exception as e:
-#             response_data = {
-#                 "success": False,
-#                 "message": str(e),
-#             }
-#         return JsonResponse(response_data)

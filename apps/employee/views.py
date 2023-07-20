@@ -14,11 +14,11 @@ from django.views.generic import (
     CreateView,
 )
 from apps.employee.forms import EmployeeForm
-from apps.employee.service.employees import Employee_service
+from apps.employee.service.employees import EmployeeService
 
 
 class EmployeeListView(View):
-    employee_service = Employee_service()
+    employee_service = EmployeeService()
     template_name = "employee/employee_list.html"
     items_per_page = 15
 
@@ -62,7 +62,7 @@ class EmployeeListView(View):
 class EmployeeUpdateView(LoginRequiredMixin, UpdateView):
     template_name = "employee/employee_edit.html"
     form_class = EmployeeForm
-    employee_service = Employee_service()
+    employee_service = EmployeeService()
     success_url = reverse_lazy("employee:employee_list")
 
     def get_object(self, queryset: Optional[QuerySet] = None) -> object:
@@ -80,7 +80,7 @@ class EmployeeUpdateView(LoginRequiredMixin, UpdateView):
 
 class EmployeeDeleteView(LoginRequiredMixin, DeleteView):
     template_name = "employee/employee_delete.html"
-    employee_service = Employee_service()
+    employee_service = EmployeeService()
     success_url = reverse_lazy("employee:employee_list")
 
     def delete(self, request: HttpRequest, *args: list, **kwargs: dict) -> HttpResponse:
@@ -148,7 +148,7 @@ class EmployeeDeleteView(LoginRequiredMixin, DeleteView):
 
 class EmployeeDetailView(DetailView):
     template_name = "employee/employee_detail.html"
-    employee_service = Employee_service()
+    employee_service = EmployeeService()
     pk_url_kwarg = "employee_id"
 
     def get_queryset(self) -> QuerySet:
@@ -181,7 +181,7 @@ class EmployeeDetailView(DetailView):
 class EmployeeCreateView(LoginRequiredMixin, CreateView):
     template_name = "employee/employee_create.html"
     form_class = EmployeeForm
-    employee_service = Employee_service()
+    employee_service = EmployeeService()
     success_url = reverse_lazy("employee:employee_list")
 
     def form_valid(self, form) -> Any:

@@ -36,10 +36,13 @@
                             <th>{% trans 'Email' %}</th>
                             <th>{% trans 'Hire date' %}</th>
                             <th>{% trans 'Position' %}</th>
+                            <th></th>
+                            <th></th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% if supervisors%}
+                        
+                        {% if supervisors %}
                         {% for supervisor in supervisors %}
                             
                         <tr>
@@ -47,11 +50,20 @@
                             <td>{{ supervisor.email }}</td>
                             <td>{{ supervisor.hire_date }}</td>
                             <td>{{ supervisor.position }}</td>
-                        </tr>   
-                        {% endfor %}
-                                {% else %}
-                            <td>{% trans 'No employee yet!' %}</td>    
+                            
+                            {% if user.is_authenticated %}
+                            <td><a href="{% url 'employee:employee_update' employee_id=employee.id %}" class="btn btn-sm btn-primary">{% trans 'Edit' %}</a></td>
+                            <td><a href="{% url 'employee:employee_delete' employee_id=employee.id %}" class="btn btn-sm btn-warning">{% trans 'Delete' %}</a></td>
                             {% endif %}
+                        
+                        </tr>   
+                        
+                        {% endfor %}
+                                
+                        {% else %}
+                            <td>{% trans 'No employee yet!' %}</td>    
+                        
+                        {% endif %}
                                      
                 
 

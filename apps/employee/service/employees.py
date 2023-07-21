@@ -109,7 +109,7 @@ class EmployeeService:
         return page
 
     @staticmethod
-    def _delete_employee(employee_id: int) -> bool:
+    def _delete_employee(self, employee_id: int) -> bool:
         """
         Delete an employee with the given ID.
 
@@ -120,7 +120,7 @@ class EmployeeService:
             bool: True if the employee was successfully deleted, False otherwise.
         """
         try:
-            employee = EmployeeService._get_employee_by_id(employee_id)
+            employee = self._get_employee_by_id(employee_id)
             employee.delete()
             return True
         except ObjectDoesNotExist:

@@ -1,4 +1,4 @@
-from uuid import uuid4
+from uuid import UUID
 from typing import List
 from datetime import datetime
 
@@ -26,13 +26,13 @@ class EmployeeService:
         employee.save()
 
     @staticmethod
-    def _get_employee_by_id(employee_id: uuid4) -> Employee:
+    def _get_employee_by_id(employee_id: UUID) -> Employee:
         """
         Retrieves a single employee based on the provided employee ID. If no such employee
         exists an Exception will be thrown.
 
         Args:
-            employee_id: The ID of the requested Employee.
+            employee_id: The UUID of the requested Employee.
 
         Returns:
             Employee: The requested Employee.
@@ -54,12 +54,12 @@ class EmployeeService:
         return Employee.objects.all()
 
     @staticmethod
-    def _get_supervisors(employee_id: int) -> List[Employee]:
+    def _get_supervisors(employee_id: UUID) -> List[Employee]:
         """
         Get the supervisors of an employee.
 
         Args:
-            employee_id (int): The ID of the employee.
+            employee_id (UUID): The ID of the employee.
 
         Returns:
             List[Employee]: A list of supervisor employees.
@@ -109,12 +109,12 @@ class EmployeeService:
         return page
 
     @staticmethod
-    def _delete_employee(self, employee_id: int) -> bool:
+    def _delete_employee(self, employee_id: UUID) -> bool:
         """
         Delete an employee with the given ID.
 
         Args:
-            employee_id (int): The ID of the employee to delete.
+            employee_id (UUID): The ID of the employee to delete.
 
         Returns:
             bool: True if the employee was successfully deleted, False otherwise.

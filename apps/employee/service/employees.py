@@ -152,7 +152,7 @@ class EmployeeService:
 
     @staticmethod
     def _get_paginated_employees(
-        sort_by: str, page_number: int, items_per_page: int
+        self, sort_by: str, page_number: int, items_per_page: int
     ) -> List:
         """
         Retrieves a paginated list of employees based on the given sorting criteria.
@@ -165,7 +165,7 @@ class EmployeeService:
         Returns:
             Page: A Page object containing the requested employees.
         """
-        employees = EmployeeService._get_sorted_employees(sort_by)
+        employees = self._get_sorted_employees(sort_by)
 
         paginator = Paginator(employees, items_per_page)
         page = paginator.get_page(page_number)
